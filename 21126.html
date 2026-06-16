@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMM 1A2B 猜數字</title>
+
+<style>
+:root{
+    --bg:#0f172a;
+    --card:rgba(255,255,255,.08);
+    --border:rgba(255,255,255,.15);
+    --text:#f8fafc;
+    --sub:#94a3b8;
+    --primary:#7c3aed;
+    --secondary:#06b6d4;
+    --success:#22c55e;
+    --danger:#ef4444;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+    radial-gradient(circle at top left,#7c3aed33,transparent 40%),
+    radial-gradient(circle at bottom right,#06b6d433,transparent 40%),
+    var(--bg);
+    color:var(--text);
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:700px;
+}
+
+.card{
+    background:var(--card);
+    backdrop-filter:blur(18px);
+    border:1px solid var(--border);
+    border-radius:24px;
+    padding:32px;
+    box-shadow:
+    0 8px 40px rgba(0,0,0,.35);
+}
+
+.title{
+    text-align:center;
+    font-size:2.3rem;
+    font-weight:800;
+    margin-bottom:10px;
+    background:linear-gradient(
+    90deg,
+    #c084fc,
+    #67e8f9
+    );
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.subtitle{
+    text-align:center;
+    color:var(--sub);
+    margin-bottom:25px;
+}
+
+.info{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:25px;
+    flex-wrap:wrap;
+}
+
+.badge{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.1);
+    padding:10px 15px;
+    border-radius:12px;
+}
+
+.input-area{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+}
+
+input{
+    flex:1;
+    padding:15px;
+    border:none;
+    border-radius:14px;
+    background:rgba(255,255,255,.08);
+    color:white;
+    font-size:1.2rem;
+    outline:none;
+}
+
+button{
+    border:none;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.guess-btn{
+    padding:15px 24px;
+    border-radius:14px;
+    background:linear-gradient(
+    135deg,
+    var(--primary),
+    var(--secondary)
+    );
+    color:white;
+    font-weight:bold;
+}
+
+.guess-btn:hover{
+    transform:translateY(-2px);
+}
+
+.restart-btn{
+    width:100%;
+    margin-top:18px;
+    padding:12px;
+    border-radius:12px;
+    background:#1e293b;
+    color:white;
+}
+
+.message{
+    text-align:center;
+    min-height:28px;
+    margin-bottom:15px;
+    font-weight:bold;
+}
+
+.history{
+    max-height:320px;
+    overflow:auto;
+    margin-top:20px;
+}
+
+.record{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    margin-bottom:10px;
+    border-radius:12px;
+    background:rgba(255,255,255,.05);
+    animation:fadeIn .3s ease;
+}
+
+.record-number{
+    font-size:1.1rem;
+    font-weight:bold;
+}
+
+.result{
+    color:#67e8f9;
+    font-weight:bold;
+}
+
+.win{
+    color:var(--success);
+}
+
+.error{
+    color:var(--danger);
+}
+
+.rules{
+    margin-top:20px;
+    color:var(--sub);
+    font-size:.95rem;
+    line-height:1.7;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.glow{
+    text-shadow:
+    0 0 10px #c084fc,
+    0 0 20px #67e8f9;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h1 class="title glow">MMM 1A2B</h1>
+
+        <p class="subtitle">
+            猜出神秘的 4 位不重複數字密碼
+        </p>
+
+        <div class="info">
+            <div class="badge">
+                🎯 次數：<span id="count">0</span>
+            </div>
+
+            <div class="badge">
+                🧩 格式：4位不重複數字
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input
+                id="guessInput"
+                maxlength="4"
+                placeholder="例如 1234">
+            <button
+                class="guess-btn"
+                onclick="guessNumber()">
+                猜測
+            </button>
+        </div>
+
+        <div
+            id="message"
+            class="message">
+        </div>
+
+        <div
+            id="history"
+            class="history">
+        </div>
+
+        <button
+            class="restart-btn"
+            onclick="restartGame()">
+            🔄 重新開始
+        </button>
+
+        <div class="rules">
+            <strong>規則：</strong><br>
+            A = 數字與位置都正確<br>
+            B = 數字正確但位置錯誤<br>
+            例如答案 1234，猜 1243 → 2A2B
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+let answer = "";
+let count = 0;
+
+function generateAnswer() {
+
+    const nums = [];
+
+    while(nums.length < 4){
+
+        const n = Math.floor(Math.random()*10);
+
+        if(!nums.includes(n)){
+            nums.push(n);
+        }
+    }
+
+    answer = nums.join("");
+}
+
+generateAnswer();
+
+function showMessage(text,type=""){
+
+    const msg =
+    document.getElementById("message");
+
+    msg.className = "message " + type;
+    msg.textContent = text;
+}
+
+function guessNumber(){
+
+    const input =
+    document.getElementById("guessInput");
+
+    const guess =
+    input.value.trim();
+
+    if(!/^\d{4}$/.test(guess)){
+        showMessage(
+        "請輸入4位數字",
+        "error");
+        return;
+    }
+
+    if(new Set(guess).size !== 4){
+        showMessage(
+        "數字不可重複",
+        "error");
+        return;
+    }
+
+    count++;
+    document.getElementById("count")
+    .textContent = count;
+
+    let A = 0;
+    let B = 0;
+
+    for(let i=0;i<4;i++){
+
+        if(guess[i]===answer[i]){
+            A++;
+        }
+        else if(answer.includes(guess[i])){
+            B++;
+        }
+    }
+
+    const history =
+    document.getElementById("history");
+
+    const record =
+    document.createElement("div");
+
+    record.className = "record";
+
+    record.innerHTML = `
+        <span class="record-number">
+            #${count}　${guess}
+        </span>
+        <span class="result">
+            ${A}A${B}B
+        </span>
+    `;
+
+    history.prepend(record);
+
+    if(A===4){
+
+        showMessage(
+        `🎉 恭喜破解密碼 ${answer}！`,
+        "win");
+
+        input.disabled = true;
+
+        return;
+    }
+
+    showMessage(
+    `${A}A${B}B，繼續努力！`);
+
+    input.value="";
+    input.focus();
+}
+
+function restartGame(){
+
+    generateAnswer();
+
+    count = 0;
+
+    document.getElementById("count")
+    .textContent = 0;
+
+    document.getElementById("history")
+    .innerHTML = "";
+
+    document.getElementById("guessInput")
+    .value = "";
+
+    document.getElementById("guessInput")
+    .disabled = false;
+
+    showMessage("新遊戲開始！");
+}
+
+document
+.getElementById("guessInput")
+.addEventListener(
+"keydown",
+e=>{
+    if(e.key==="Enter"){
+        guessNumber();
+    }
+});
+
+</script>
+
+</body>
+</html>
